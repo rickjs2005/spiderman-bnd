@@ -2,6 +2,7 @@ import Nav from "@/components/nav";
 import Footer from "@/components/footer";
 import { Act1 } from "@/components/act1/act1";
 import { Scene } from "@/components/act1/scene";
+import { Story } from "@/components/act2/story";
 
 export default function Home() {
   return (
@@ -11,9 +12,7 @@ export default function Home() {
         <Act1>
           <Scene />
         </Act1>
-        <section id="story" className="h-screen grid place-items-center">
-          STORY
-        </section>
+        <Story />
         <section id="threats" className="h-screen grid place-items-center">
           THREATS
         </section>

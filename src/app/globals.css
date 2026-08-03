@@ -7,6 +7,15 @@
   --paper: #f4efe6;
 }
 
+@keyframes story-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer utilities {
   .halftone {
     background-image: radial-gradient(circle, rgb(0 0 0 / 0.55) 1.2px, transparent 1.3px);
