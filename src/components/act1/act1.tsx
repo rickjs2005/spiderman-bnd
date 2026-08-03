@@ -7,6 +7,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { act1State, act1Flags, damp } from "@/lib/act1-store";
 import { SITE } from "@/lib/content";
 import { MEDIA } from "@/lib/media";
+import { HalftoneBurst } from "./halftone-burst";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -165,6 +166,8 @@ export function Act1({ children }: { children?: ReactNode }) {
     >
       <div className="sticky top-0 h-screen overflow-hidden bg-[var(--ink)]">
         {mode === "scene" && children}
+
+        {mode === "scene" && <HalftoneBurst containerRef={containerRef} />}
 
         <div className="pointer-events-none absolute inset-x-0 top-[38vh] z-10 flex flex-col items-center px-6 text-center">
           <h1

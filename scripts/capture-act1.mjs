@@ -8,8 +8,16 @@ import { chromium } from "playwright";
 const [, , url = "http://localhost:3000", outDir = "shots"] = process.argv;
 const points = [
   0, 0.02, 0.05, 0.08, 0.1, 0.15, 0.2, 0.22, 0.25, 0.3, 0.33, 0.35, 0.38, 0.4, 0.42, 0.45, 0.48, 0.5, 0.55, 0.6, 0.65,
-  0.7, 0.75, 0.8, 0.85, 0.9, 0.93, 0.95, 0.97, 1,
+  0.7, 0.75, 0.8, 0.85, 0.9,
+  // Task 7 (halftone burst, PHASE_BURST = [0.95, 1]): dense coverage of the
+  // burst's radial reveal, one point per hundredth right where it matters.
+  0.92, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1,
 ];
+// Points past the container itself: fractions of scrollableRange beyond 1
+// (i.e. actual pixels scrolled past #act1's bottom edge), to see the first
+// ~200px into Act 2 once the sticky frame has released -- this is exactly
+// the handoff window Task 7's "no dead zone" invariant is about.
+const pastPoints = [1.03, 1.06, 1.1]; // ~ +70px, +140px, +230px on a typical viewport
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 810 } });
 await page.goto(url, { waitUntil: "networkidle" });
@@ -24,5 +32,11 @@ for (const p of points) {
   await page.evaluate((yy) => window.scrollTo(0, yy), y);
   await page.waitForTimeout(900);
   await page.screenshot({ path: `${outDir}/act1-${String(Math.round(p * 100)).padStart(3, "0")}.png` });
+}
+for (const p of pastPoints) {
+  const y = Math.round(top + p * scrollableRange);
+  await page.evaluate((yy) => window.scrollTo(0, yy), y);
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: `${outDir}/act1-past-${String(Math.round(p * 100)).padStart(3, "0")}.png` });
 }
 await browser.close();
