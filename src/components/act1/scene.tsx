@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { act1State, act1Flags, damp } from "@/lib/act1-store";
 import { EyeMask } from "./eye-mask";
 import { Dive } from "./dive";
+import { Webs } from "./webs";
 import { PHASE_EYE, PHASE_DIVE, phaseT } from "./phases";
 
 export { PHASE_EYE, PHASE_CROSS, PHASE_DIVE, PHASE_BURST } from "./phases";
@@ -125,6 +126,7 @@ export function Scene() {
       <Rig />
       <EyeMask />
       <Dive />
+      <Webs />
     </Canvas>
   );
 }
