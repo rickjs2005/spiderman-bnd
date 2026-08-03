@@ -1,6 +1,7 @@
 import Nav from "@/components/nav";
 import Footer from "@/components/footer";
 import { Act1 } from "@/components/act1/act1";
+import { Scene } from "@/components/act1/scene";
 
 export default function Home() {
   return (
@@ -8,9 +9,7 @@ export default function Home() {
       <Nav />
       <main className="flex-1">
         <Act1>
-          <div className="absolute inset-0 grid place-items-center text-[var(--paper)]/40">
-            ACT 1 SCENE
-          </div>
+          <Scene />
         </Act1>
         <section id="story" className="h-screen grid place-items-center">
           STORY

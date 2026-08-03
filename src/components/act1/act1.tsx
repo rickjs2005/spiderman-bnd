@@ -17,16 +17,44 @@ function clamp01(v: number) {
   return v < 0 ? 0 : v > 1 ? 1 : v;
 }
 
+function smoothstep01(v: number) {
+  const t = clamp01(v);
+  return t * t * (3 - 2 * t);
+}
+
+/** Opacity of a trapezoid fade: 0 before inStart, eased up to 1 by inEnd,
+ * held at 1 until outStart, eased back down to 0 by outEnd. */
+function fadeWindow(p: number, inStart: number, inEnd: number, outStart: number, outEnd: number) {
+  if (p <= inStart) return 0;
+  if (p < inEnd) return smoothstep01((p - inStart) / (inEnd - inStart));
+  if (p <= outStart) return 1;
+  if (p < outEnd) return 1 - smoothstep01((p - outStart) / (outEnd - outStart));
+  return 0;
+}
+
+// Title: fully entered by p=0.22 (end of the eye's pull-back), fully gone by
+// p=0.42 so the frame is clear for the PHASE_CROSS -> dive handoff.
+const TITLE_IN_START = 0.16;
+const TITLE_IN_END = 0.22;
+const TITLE_OUT_START = 0.36;
+const TITLE_OUT_END = 0.42;
+
+// Badge: visible immediately from p=0 (no fade-in), clears out alongside
+// the title.
+const BADGE_OUT_START = 0.36;
+const BADGE_OUT_END = 0.42;
+
 /**
  * Act 1: a ~4-screen-tall container; inside it, a sticky 100vh frame holds
- * the scene (R3F canvas mounts here as `children` in Task 4) plus a title
- * overlay that fades out as the scene takes over. The overlay reads
- * act1State.progress via rAF and writes straight to element.style -- no
- * setState per frame, no re-render on scroll.
+ * the scene (the R3F canvas, e.g. <Scene/> from ./scene, passed in as
+ * `children`) plus a title overlay that fades in/out as the scene plays.
+ * The overlay reads act1State.progress via rAF and writes straight to
+ * element.style -- no setState per frame, no re-render on scroll.
  */
 export function Act1({ children }: { children?: ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const badgeRef = useRef<HTMLParagraphElement>(null);
   // null = still deciding (SSR/first paint); avoids a flash of the fallback
   const [mode, setMode] = useState<"scene" | "static" | null>(null);
 
@@ -84,19 +112,29 @@ export function Act1({ children }: { children?: ReactNode }) {
 
   /* Title/badge overlay reads act1State.progress every frame and writes
      directly to the DOM -- same no-setState-per-frame rule as the damp
-     loop above. Visible at the top of the scroll, fades out early so the
-     scene reads clearly for the rest of Act 1. */
+     loop above. The badge (fan-concept disclaimer) is visible from the very
+     first frame; the title waits until the eye's pull-back has read clearly
+     (~p0.22) before it enters, and both clear out together (~p0.42) so the
+     frame is empty for the cross-fade into the dive. */
   useEffect(() => {
     if (mode !== "scene") return;
     let raf = 0;
     const tick = () => {
+      const p = act1State.progress;
+
       if (titleRef.current) {
-        const p = act1State.progress;
-        const alpha = 1 - clamp01((p - 0.02) / 0.13);
+        const alpha = fadeWindow(p, TITLE_IN_START, TITLE_IN_END, TITLE_OUT_START, TITLE_OUT_END);
         titleRef.current.style.opacity = alpha.toFixed(3);
         titleRef.current.style.visibility = alpha > 0.002 ? "visible" : "hidden";
         titleRef.current.style.transform = `translateY(${(-(1 - alpha) * 24).toFixed(1)}px)`;
       }
+
+      if (badgeRef.current) {
+        const alpha = fadeWindow(p, -1, 0, BADGE_OUT_START, BADGE_OUT_END);
+        badgeRef.current.style.opacity = alpha.toFixed(3);
+        badgeRef.current.style.visibility = alpha > 0.002 ? "visible" : "hidden";
+      }
+
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -128,14 +166,18 @@ export function Act1({ children }: { children?: ReactNode }) {
       <div className="sticky top-0 h-screen overflow-hidden bg-[var(--ink)]">
         {mode === "scene" && children}
 
-        <div
-          ref={titleRef}
-          className="pointer-events-none absolute inset-x-0 top-[38vh] z-10 flex flex-col items-center px-6 text-center"
-        >
-          <h1 className="font-[family-name:var(--font-anton)] text-4xl tracking-wide text-[var(--paper)] drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl">
+        <div className="pointer-events-none absolute inset-x-0 top-[38vh] z-10 flex flex-col items-center px-6 text-center">
+          <h1
+            ref={titleRef}
+            style={{ opacity: 0, visibility: "hidden" }}
+            className="font-[family-name:var(--font-anton)] text-4xl tracking-wide text-[var(--paper)] drop-shadow-[0_2px_20px_rgba(0,0,0,0.6)] sm:text-6xl"
+          >
             {SITE.title}
           </h1>
-          <p className="mt-4 text-[10px] font-semibold tracking-[0.3em] text-[var(--paper)]/70 sm:text-xs">
+          <p
+            ref={badgeRef}
+            className="mt-4 text-[10px] font-semibold tracking-[0.3em] text-[var(--paper)]/70 sm:text-xs"
+          >
             {SITE.badge}
           </p>
         </div>
