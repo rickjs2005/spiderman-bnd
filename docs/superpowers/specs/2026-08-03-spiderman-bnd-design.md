@@ -78,10 +78,11 @@ créditos de fã + disclaimer completo.
 
 ## Arquitetura técnica
 
-**Stack:** Next.js 15 (App Router, client-side), React Three Fiber + drei,
-GSAP ScrollTrigger, Lenis, Tailwind v4. Molde do aurex-motors — gotchas já
-conhecidos: `y` vs `yPercent`, `@layer` no Tailwind v4, zona morta do
-ScrollTrigger.
+**Stack:** Next.js 16.2.x (App Router, client-side), React 19.2, React
+Three Fiber 9.6 + drei 10.7, GSAP 3.15 ScrollTrigger, Lenis 1.3, Tailwind
+v4 — versões pinadas do TERRAL, o molde mais recente provado em conjunto.
+Gotchas já conhecidos: `y` vs `yPercent`, `@layer` no Tailwind v4, zona
+morta do ScrollTrigger.
 
 **Ato 1 (R3F):** um único `<Canvas>` fixo na viewport; página rola "por
 baixo" (altura fantasma ~400vh dirige o progresso). Um ScrollTrigger com
