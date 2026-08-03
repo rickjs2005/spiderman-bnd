@@ -35,12 +35,22 @@ export const TIMELINE = [
   { year: "2026", title: "Brand New Day", line: "A brand new day." },
 ] as const;
 
+// Paired to MEDIA.gallery by index (src/lib/media.ts) -- 6 stills, 6 captions.
 export const GALLERY_CAPTIONS = [
   "Concept still — the new mask.",
   "Concept still — a city that moved on.",
   "Concept still — the threat nobody sees coming.",
   "Concept still — one more brand new day.",
+  "Concept still — the cost of the mask.",
+  "Concept still — surrounded, and still swinging.",
 ] as const;
+
+export const WATCH = {
+  eyebrow: "Watch",
+  trailerHeading: "Official Trailer",
+  playLabel: "Play official trailer",
+  galleryHeading: "Concept Gallery",
+} as const;
 
 export const FINALE = {
   headline: "Every legend needs a witness.",
