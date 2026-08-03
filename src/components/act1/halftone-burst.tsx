@@ -15,7 +15,16 @@ function easeOutQuad(t: number) {
   return 1 - (1 - t) * (1 - t);
 }
 
-const [BURST_START, BURST_END] = PHASE_BURST;
+/**
+ * The overlay is driven off act1State.raw, not the narrative PHASE_BURST
+ * window (which is defined in damped-progress space for the scene/camera).
+ * BURST_START mirrors PHASE_BURST[0] since raw and damped are still close
+ * together that early -- but BURST_END is a raw-space constant with a
+ * built-in safety margin (see the comment block below for why 1.0 itself
+ * is not safe to target).
+ */
+const BURST_START = PHASE_BURST[0];
+const BURST_END = 0.985;
 /**
  * clip-path circle()'s percentage radius is resolved against the box's
  * diagonal reference (sqrt(w^2+h^2)/sqrt(2), per the CSS Masking spec) --
@@ -32,31 +41,46 @@ const EXIT_FADE_MS = 300;
 /**
  * THE SEAM -- covers Act1's canvas with a comic-halftone burst before the
  * scroll hands off to the DOM Act 2 sections underneath. rAF-driven only
- * (act1State.progress read every frame, written straight to
- * element.style); no setState per frame, no re-render on scroll, same
- * discipline as the title/badge overlay in act1.tsx.
+ * (act1State.raw read every frame, written straight to element.style); no
+ * setState per frame, no re-render on scroll, same discipline as the
+ * title/badge overlay in act1.tsx.
  *
- * TIMING INVARIANT -- why this can never expose a canvas edge or a
- * dead-zone gap between the canvas and the DOM below it:
+ * RAW, NOT DAMPED -- and why that distinction is the whole seam:
  *
  * act1.tsx sizes Act1's container at 400vh and pins its ScrollTrigger to
  * `start: "top top", end: "bottom bottom"` on that SAME container -- so
- * act1State.raw (and, damped, act1State.progress) reaches 1.0 at the
- * *exact* scroll position where the container's bottom edge meets the
- * viewport's bottom edge. That is also the exact scroll position at which
- * `position: sticky` releases the pinned frame -- sticky is native CSS
- * behaviour: it holds `top: 0` for as long as the container has room below
- * the pinned element, and lets go the instant it doesn't. PHASE_BURST is
- * [0.95, 1], so this overlay's clip-path circle finishes expanding to
- * MAX_RADIUS_PCT (fully opaque, covering the entire sticky frame -- canvas
- * included) at that very same instant. There is no scroll position where
- * the frame is unpinned (and so starts moving with the rest of the
- * document, per sticky's "glued to the container's trailing edge" behavior
- * once released) while the overlay is anything less than fully opaque --
- * both events are defined by the same p=1.0. The overlay doesn't race the
- * handoff; it *is* the handoff.
+ * act1State.raw reaches 1.0 at the *exact* scroll position where the
+ * container's bottom edge meets the viewport's bottom edge. That is also
+ * the exact scroll position at which `position: sticky` releases the
+ * pinned frame -- sticky is native CSS behaviour: it holds `top: 0` for as
+ * long as the container has room below the pinned element, and lets go the
+ * instant it doesn't. Both events are pinned to the same underlying
+ * quantity: raw scroll position.
  *
- * Past that point this element (still `absolute inset-0` inside the now-
+ * act1State.progress is NOT that quantity -- it's `raw` exponentially
+ * damped toward (lambda 4.5, see scene.tsx's RIG_LAMBDA) for the camera
+ * rig, so it *lags* raw by design (that lag is what makes the camera feel
+ * weighty instead of glued to the scrollbar). At ordinary scroll speeds
+ * that lag is genuinely a few frames -- but at the exact instant raw hits
+ * 1.0 and sticky lets go, a damped progress that's still mid-catch-up can
+ * be meaningfully below 1.0. Driving the clip-path off progress would mean
+ * the circle is still mid-expansion the moment the canvas is yanked away by
+ * the unpinning frame -- a sliver of bare canvas (or the scene behind it)
+ * exposed for exactly as many frames as progress was lagging. This overlay
+ * is a DOM clip-path with no camera-weight reason to be damped in the first
+ * place -- scroll position is its natural timeline -- so it reads
+ * act1State.raw directly and sidesteps the lag entirely.
+ *
+ * BURST_END is 0.985, not 1.0: a small safety margin on top of the
+ * raw-vs-damped fix itself, so that full coverage (MAX_RADIUS_PCT, fully
+ * opaque) is reached slightly *before* raw=1.0/sticky-release rather than
+ * exactly at it -- absorbing any residual rAF/ScrollTrigger sampling jitter
+ * between "this component's tick() read raw" and "the browser evaluates the
+ * sticky release" within the same frame. There is no scroll position past
+ * raw=0.985 where the frame can unpin (and start moving with the rest of
+ * the document) while the overlay is anything less than fully opaque.
+ *
+ * Past raw=1.0 this element (still `absolute inset-0` inside the now-
  * unstuck sticky frame) simply scrolls away as part of normal document
  * flow, fully opaque the entire way, until the frame -- and this overlay
  * with it -- has left the viewport and the Story section underneath is all
@@ -84,7 +108,7 @@ export function HalftoneBurst({
     const tick = () => {
       const el = overlayRef.current;
       if (el && !exitingRef.current) {
-        const p = act1State.progress;
+        const p = act1State.raw;
         const t = clamp01((p - BURST_START) / (BURST_END - BURST_START));
         const radius = easeOutQuad(t) * MAX_RADIUS_PCT;
         el.style.clipPath = `circle(${radius.toFixed(2)}% at ${CENTER})`;
@@ -96,8 +120,8 @@ export function HalftoneBurst({
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  /* Exit/re-entry reset -- see the TIMING INVARIANT comment above for why
-     this isn't load-bearing for the seam itself. */
+  /* Exit/re-entry reset -- see the THE SEAM / RAW, NOT DAMPED comment above
+     for why this isn't load-bearing for the seam itself. */
   useEffect(() => {
     const container = containerRef.current;
     const overlay = overlayRef.current;
