@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Anton, Bangers, Inter } from "next/font/google";
 import { SITE } from "@/lib/content";
+import { SmoothScroll } from "@/components/smooth-scroll";
 import "./globals.css";
 
 const anton = Anton({
@@ -41,6 +42,7 @@ export default function RootLayout({
       className={`${anton.variable} ${bangers.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--ink)] text-[var(--paper)]">
+        <SmoothScroll />
         {children}
       </body>
     </html>
