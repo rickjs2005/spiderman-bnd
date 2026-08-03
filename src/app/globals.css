@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  --red: #e42618;
+  --blue: #1d3a8f;
+  --ink: #0a0a0f;
+  --paper: #f4efe6;
+}
+
+@layer utilities {
+  .halftone {
+    background-image: radial-gradient(circle, rgb(0 0 0 / 0.55) 1.2px, transparent 1.3px);
+    background-size: 7px 7px;
+  }
+  .comic-border {
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+}
