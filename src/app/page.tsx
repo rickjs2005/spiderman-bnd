@@ -3,6 +3,7 @@ import Footer from "@/components/footer";
 import { Act1 } from "@/components/act1/act1";
 import { Scene } from "@/components/act1/scene";
 import { Story } from "@/components/act2/story";
+import { Threats } from "@/components/act2/threats";
 
 export default function Home() {
   return (
@@ -13,9 +14,7 @@ export default function Home() {
           <Scene />
         </Act1>
         <Story />
-        <section id="threats" className="h-screen grid place-items-center">
-          THREATS
-        </section>
+        <Threats />
         <section id="watch" className="h-screen grid place-items-center">
           WATCH
         </section>

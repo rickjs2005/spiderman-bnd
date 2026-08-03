@@ -16,6 +16,70 @@
   }
 }
 
+/* "The Unseen" villain name glitch (src/components/act2/threats.tsx):
+   two aria-hidden RGB-offset clones sitting behind the real heading, each
+   sliced with clip-path inset() bands that jump between keyframes (steps()
+   timing, not eased) so it reads as a digital tear rather than a smooth
+   wobble. -a keeps a permanent -offset baseline, -b a mirrored +offset one,
+   so the two never overlap exactly. Paused by default -- only
+   .threat-unseen.is-active (toggled by an IntersectionObserver in
+   UnseenPanel) runs them, keeping the cost off while the panel is
+   scrolled away. */
+@keyframes glitch-jitter-a {
+  0%,
+  100% {
+    transform: translate(-3px, 0);
+    clip-path: inset(0 0 0 0);
+  }
+  15% {
+    transform: translate(-6px, 2px);
+    clip-path: inset(15% 0 55% 0);
+  }
+  30% {
+    transform: translate(-1px, -2px);
+    clip-path: inset(60% 0 8% 0);
+  }
+  50% {
+    transform: translate(-4px, 1px);
+    clip-path: inset(30% 0 35% 0);
+  }
+  70% {
+    transform: translate(-2px, -1px);
+    clip-path: inset(5% 0 70% 0);
+  }
+  85% {
+    transform: translate(-5px, 2px);
+    clip-path: inset(48% 0 18% 0);
+  }
+}
+@keyframes glitch-jitter-b {
+  0%,
+  100% {
+    transform: translate(3px, 0);
+    clip-path: inset(0 0 0 0);
+  }
+  15% {
+    transform: translate(6px, -2px);
+    clip-path: inset(55% 0 15% 0);
+  }
+  30% {
+    transform: translate(1px, 2px);
+    clip-path: inset(8% 0 60% 0);
+  }
+  50% {
+    transform: translate(4px, -1px);
+    clip-path: inset(35% 0 30% 0);
+  }
+  70% {
+    transform: translate(2px, 1px);
+    clip-path: inset(70% 0 5% 0);
+  }
+  85% {
+    transform: translate(5px, -2px);
+    clip-path: inset(18% 0 48% 0);
+  }
+}
+
 @layer utilities {
   .halftone {
     background-image: radial-gradient(circle, rgb(0 0 0 / 0.55) 1.2px, transparent 1.3px);
@@ -24,5 +88,25 @@
   .comic-border {
     border: 3px solid var(--ink);
     box-shadow: 6px 6px 0 var(--ink);
+  }
+  .glitch-layer {
+    animation-duration: 2.6s;
+    animation-timing-function: steps(1, end);
+    animation-iteration-count: infinite;
+    animation-play-state: paused;
+    opacity: 0.85;
+    will-change: transform, clip-path;
+  }
+  .threat-unseen.is-active .glitch-layer {
+    animation-play-state: running;
+  }
+  .glitch-red {
+    color: var(--red);
+    animation-name: glitch-jitter-a;
+  }
+  .glitch-blue {
+    color: var(--blue);
+    animation-name: glitch-jitter-b;
+    animation-delay: -0.9s;
   }
 }
