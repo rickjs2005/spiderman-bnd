@@ -5,6 +5,7 @@ import { Scene } from "@/components/act1/scene";
 import { Story } from "@/components/act2/story";
 import { Threats } from "@/components/act2/threats";
 import { Watch } from "@/components/act2/watch";
+import { Legacy } from "@/components/act2/legacy";
 
 export default function Home() {
   return (
@@ -17,9 +18,7 @@ export default function Home() {
         <Story />
         <Threats />
         <Watch />
-        <section id="legacy" className="h-screen grid place-items-center">
-          LEGACY
-        </section>
+        <Legacy />
       </main>
       <Footer />
     </>

@@ -35,6 +35,11 @@ export const TIMELINE = [
   { year: "2026", title: "Brand New Day", line: "A brand new day." },
 ] as const;
 
+export const LEGACY = {
+  eyebrow: "The Legacy",
+  heading: "The Holland Era",
+} as const;
+
 // Paired to MEDIA.gallery by index (src/lib/media.ts) -- 6 stills, 6 captions.
 export const GALLERY_CAPTIONS = [
   "Concept still — the new mask.",
@@ -55,5 +60,6 @@ export const WATCH = {
 export const FINALE = {
   headline: "Every legend needs a witness.",
   cta: "Share this concept",
+  copiedToast: "Link copied!",
   credits: "A fan tribute built with Next.js, Three.js and GSAP.",
 };
