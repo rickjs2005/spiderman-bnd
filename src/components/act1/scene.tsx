@@ -11,7 +11,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { act1State, act1Flags, damp } from "@/lib/act1-store";
 import { EyeMask } from "./eye-mask";
-import { PHASE_EYE, phaseT } from "./phases";
+import { Dive } from "./dive";
+import { PHASE_EYE, PHASE_DIVE, phaseT } from "./phases";
 
 export { PHASE_EYE, PHASE_CROSS, PHASE_DIVE, PHASE_BURST } from "./phases";
 
@@ -25,6 +26,17 @@ const TILT_START = 0.04;
 const TILT_END = 0;
 const DRIFT_X = 0.1;
 const DRIFT_Y = 0.06;
+
+/** Task 5: PHASE_DIVE takes the camera from the held eye-shot position on
+ * through the NYC diorama (dive.tsx). CAMERA_Z_DIVE_END must stay past
+ * LAYER_Z's deepest layer (-14 in dive.tsx) so the last layer is still
+ * comfortably ahead of the camera at diveT=1, not behind it. */
+const CAMERA_Z_DIVE_END = -12;
+/** Amplitude/cycle-count of the camera's x sway during PHASE_DIVE -- must
+ * match dive.tsx's SWAY_CYCLES so the camera reads as loosely "following"
+ * Spidey's own (larger-amplitude) pendulum, not fighting it. */
+const DIVE_SWAY_AMPLITUDE = 0.8;
+const DIVE_SWAY_CYCLES = 2;
 
 /**
  * Owns act1State.progress and the camera. Mounting flips
@@ -60,15 +72,24 @@ function Rig() {
     mouse.current.y = damp(mouse.current.y, act1State.mouseY, RIG_LAMBDA, dt);
 
     // PHASE_EYE: dolly back from inches-from-the-mask to a held medium
-    // shot, with a slight dutch tilt easing out as we pull away. Later
-    // phases (Task 5+) take the camera from here.
+    // shot, with a slight dutch tilt easing out as we pull away.
     const eyeT = phaseT(p, PHASE_EYE);
     const z = THREE.MathUtils.lerp(CAMERA_Z_START, CAMERA_Z_EYE_END, eyeT);
     const tilt = THREE.MathUtils.lerp(TILT_START, TILT_END, eyeT);
 
-    camera.position.x = mouse.current.x * DRIFT_X;
+    // PHASE_DIVE: continue on from wherever PHASE_EYE left off. `z` above
+    // is already pinned at CAMERA_Z_EYE_END for the whole PHASE_CROSS/
+    // PHASE_DIVE range (eyeT saturates at 1 past p=0.35), and `diveZ` is
+    // exactly CAMERA_Z_EYE_END while diveT is 0 (p<=0.45) -- so adding
+    // (diveZ - CAMERA_Z_EYE_END) on top of `z` composes cleanly with no
+    // branch: it's a no-op until PHASE_DIVE starts, then takes over.
+    const diveT = phaseT(p, PHASE_DIVE);
+    const diveZ = THREE.MathUtils.lerp(CAMERA_Z_EYE_END, CAMERA_Z_DIVE_END, diveT);
+    const swayX = Math.sin(diveT * Math.PI * 2 * DIVE_SWAY_CYCLES) * DIVE_SWAY_AMPLITUDE;
+
+    camera.position.x = mouse.current.x * DRIFT_X + swayX;
     camera.position.y = -mouse.current.y * DRIFT_Y;
-    camera.position.z = z;
+    camera.position.z = z + (diveZ - CAMERA_Z_EYE_END);
     camera.rotation.z = tilt;
   });
 
@@ -103,6 +124,7 @@ export function Scene() {
       <directionalLight position={[-2, -1, 3]} intensity={0.3} color="#ffe9d6" />
       <Rig />
       <EyeMask />
+      <Dive />
     </Canvas>
   );
 }
