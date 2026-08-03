@@ -180,13 +180,19 @@ console.log("track transform at scrub end (for dead-zone comparison with oversho
 
 // Finale sequence
 await page.evaluate(() => document.querySelector(".legacy-finale")?.scrollIntoView({ block: "center" }));
-await page.waitForTimeout(3200); // full reveal timeline (bg+webs+mask+headline+share+credits) runs ~2.7s
+await page.waitForTimeout(3200); // full reveal timeline (bg+webs+mask+headline+share) runs ~2.2s
 await page.screenshot({ path: `${outDir}/finale-revealed.png` });
 
 const altTexts = await page.locator("#legacy img").evaluateAll((imgs) => imgs.map((img) => img.getAttribute("alt")));
 console.log("legacy <img alt> values:", JSON.stringify(altTexts));
 
-const disclaimerText = await page.locator(".finale-disclaimer").innerText();
-console.log("finale disclaimer text:", disclaimerText);
+// Task 12 dedupe: FINALE.credits + SITE.disclaimer used to render here AND
+// in the site-wide <Footer/> immediately below Legacy in page.tsx -- now
+// only Footer renders them, so .finale-credits/.finale-disclaimer no longer
+// exist in the DOM at all. Assert that instead of the old innerText() read.
+const finaleCreditsCount = await page.locator(".finale-credits, .finale-disclaimer").count();
+console.log("finale-credits/finale-disclaimer elements in DOM (expect 0, deduped into Footer):", finaleCreditsCount);
+const footerDisclaimerText = await page.locator("footer p").first().innerText();
+console.log("footer disclaimer text:", footerDisclaimerText);
 
 await browser.close();

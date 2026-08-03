@@ -79,7 +79,7 @@ export function Watch() {
     >
       <div className="mx-auto max-w-5xl">
         <div className="watch-fade">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red-text)]">
             {WATCH.eyebrow}
           </p>
           <h2 className="mt-2 font-[family-name:var(--font-anton)] text-4xl uppercase leading-[0.9] tracking-tight sm:text-6xl">
@@ -156,6 +156,10 @@ function TrailerFacade({ playing, onPlay }: { playing: boolean; onPlay: () => vo
   );
 }
 
+/** Gallery cells sit inside Watch's `mx-auto max-w-5xl` wrapper, so above
+ * the 1024px breakpoint a column is `~330px` (max-w-5xl / 3 cols, minus
+ * gaps), NOT `33vw` of the full viewport -- the `sizes` below reflects that
+ * cap instead of overestimating on wide desktop screens. */
 function Gallery({ interactive }: { interactive: boolean }) {
   const mediaRefs = useRef<(HTMLDivElement | null)[]>([]);
   const rafRef = useRef<number | null>(null);
@@ -217,7 +221,7 @@ function Gallery({ interactive }: { interactive: boolean }) {
                 src={src}
                 alt={caption}
                 fill
-                sizes="(min-width: 640px) 33vw, 50vw"
+                sizes="(min-width: 1024px) 330px, (min-width: 640px) 33vw, 50vw"
                 className="object-cover"
               />
             </div>

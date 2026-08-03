@@ -34,7 +34,9 @@ const WEB_PATHS = [
  * Act 2 closer, "The Legacy": a horizontally-scrubbed filmstrip of the four
  * Holland-era TIMELINE entries, followed immediately by the site's cinematic
  * finale (webs closing the screen, the poster's mask rising center-stage,
- * FINALE.headline, a share button, credits + SITE.disclaimer).
+ * FINALE.headline, a share button). Credits + SITE.disclaimer are
+ * deliberately NOT repeated here (Task 12 deduped a Task 11 double-render) --
+ * the site-wide <Footer/> immediately below is their one canonical home.
  *
  * The filmstrip and the finale are deliberately TWO separate ScrollTriggers
  * sharing one <section>, not one combined pin: the filmstrip's scroll
@@ -153,10 +155,7 @@ export function Legacy() {
         });
         gsap.set(finale.querySelector(".finale-bg"), { opacity: 0 });
         gsap.set(finale.querySelector(".finale-mask"), { opacity: 0, y: 40, scale: 0.9 });
-        gsap.set(
-          finale.querySelectorAll(".finale-headline, .finale-share, .finale-credits, .finale-disclaimer"),
-          { opacity: 0, y: 20 },
-        );
+        gsap.set(finale.querySelectorAll(".finale-headline, .finale-share"), { opacity: 0, y: 20 });
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -181,11 +180,6 @@ export function Legacy() {
             finale.querySelector(".finale-share"),
             { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" },
             "-=0.3",
-          )
-          .to(
-            finale.querySelectorAll(".finale-credits, .finale-disclaimer"),
-            { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.08 },
-            "-=0.2",
           );
       }
     }, section);
@@ -212,14 +206,18 @@ export function Legacy() {
             just its single-line desktop height (where sm:top-10 stacks
             cleanly under the nav's one-line logo, confirmed in review). */}
         <div className="pointer-events-none absolute left-6 top-20 z-10 sm:left-10 sm:top-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red)]">{LEGACY.eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red-text)]">{LEGACY.eyebrow}</p>
           <h2 className="mt-2 font-[family-name:var(--font-anton)] text-4xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-6xl">
             {LEGACY.heading}
           </h2>
         </div>
         <div ref={trackRef} className="legacy-track flex h-full items-center gap-6 pl-[8vw] pr-[8vw] sm:gap-10">
+          {/* No `priority` here: the filmstrip is several screens below the
+              fold (after Act1/Story/Threats/Watch), so none of these cards
+              are ever part of the first paint -- eager-loading one would
+              only compete with the site's actual LCP candidate. */}
           {TIMELINE.map((entry, i) => (
-            <LegacyCard key={entry.year} entry={entry} src={MEDIA.timeline[i]} priority={i === 0} />
+            <LegacyCard key={entry.year} entry={entry} src={MEDIA.timeline[i]} />
           ))}
         </div>
       </div>
@@ -245,13 +243,17 @@ export function Legacy() {
 function LegacyCard({
   entry,
   src,
-  priority,
   className = CARD_CLASS,
+  // Matches CARD_CLASS's own w-[85vw]/sm:w-[55vw]/lg:w-[36vw] -- the
+  // filmstrip track has no max-width cap, so these ARE the real rendered
+  // widths. StaticLegacy overrides this to "100vw" below since its cards
+  // stack full-width instead.
+  sizes = "(min-width: 1024px) 36vw, (min-width: 640px) 55vw, 85vw",
 }: {
   entry: TimelineEntry;
   src: string;
-  priority?: boolean;
   className?: string;
+  sizes?: string;
 }) {
   return (
     <div className={`legacy-card relative overflow-hidden bg-[var(--ink)] ${className}`}>
@@ -259,9 +261,8 @@ function LegacyCard({
         src={src}
         alt={`${entry.title} concept still`}
         fill
-        sizes="(min-width: 1024px) 36vw, (min-width: 640px) 55vw, 85vw"
+        sizes={sizes}
         className="object-cover"
-        priority={priority}
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-[var(--ink)]/25 to-transparent" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 px-6 pb-8">
@@ -321,12 +322,11 @@ function FinaleContent({ onShare }: { onShare: () => void }) {
       >
         {FINALE.cta}
       </button>
-      <p className="finale-credits mt-10 text-xs uppercase tracking-[0.2em] text-[var(--paper)]/70">
-        {FINALE.credits}
-      </p>
-      <p className="finale-disclaimer mt-2 max-w-md text-[11px] leading-relaxed text-[var(--paper)]/50">
-        {SITE.disclaimer}
-      </p>
+      {/* FINALE.credits + SITE.disclaimer are NOT repeated here -- the
+          site-wide <Footer/> (immediately below Legacy in page.tsx) is the
+          single canonical place for both, per the project rule that the
+          disclaimer must appear in nav badge + footer + meta description.
+          Task 11 rendered them twice (finale AND footer); deduped here. */}
     </div>
   );
 }
@@ -356,19 +356,24 @@ function StaticLegacy({ onShare, toast }: { onShare: () => void; toast: string |
   return (
     <>
       <section id="legacy" aria-label="The Legacy" className="relative bg-[var(--ink)] px-6 py-16 sm:px-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red)]">{LEGACY.eyebrow}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red-text)]">{LEGACY.eyebrow}</p>
         <h2 className="mt-2 font-[family-name:var(--font-anton)] text-4xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-6xl">
           {LEGACY.heading}
         </h2>
 
         <div className="mt-10 flex flex-col gap-6">
+          {/* No priority here either -- see the matching comment on the
+              scroll variant above; StaticLegacy is just as far below the
+              fold. sizes="100vw": this stack has no max-width cap (only
+              the section's own px-6/sm:px-10 padding), unlike the
+              filmstrip's CARD_CLASS-driven widths. */}
           {TIMELINE.map((entry, i) => (
             <LegacyCard
               key={entry.year}
               entry={entry}
               src={MEDIA.timeline[i]}
-              priority={i === 0}
               className="h-[60vh] w-full sm:h-[70vh]"
+              sizes="100vw"
             />
           ))}
         </div>

@@ -163,9 +163,14 @@ export function Story() {
             >
               {panel.sfx}
             </span>
-            <h3 className="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide sm:text-2xl">
+            {/* h2, not h3 -- Story is the first DOM section after Act1's h1
+                (Act1's canvas has no heading of its own to sit between
+                them), so an h3 here would skip a level and fail Lighthouse's
+                heading-order a11y audit. Multiple sibling h2s across the 5
+                panels is valid heading structure (no skip, just breadth). */}
+            <h2 className="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide sm:text-2xl">
               {panel.title}
-            </h3>
+            </h2>
             <p className="mt-2 text-base leading-relaxed">{panel.body}</p>
           </div>
         ))}
@@ -198,9 +203,9 @@ function StaticStory() {
             >
               {panel.sfx}
             </span>
-            <h3 className="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide">
+            <h2 className="font-[family-name:var(--font-anton)] text-xl uppercase tracking-wide">
               {panel.title}
-            </h3>
+            </h2>
             <p className="mt-2 text-base leading-relaxed">{panel.body}</p>
           </div>
         ))}

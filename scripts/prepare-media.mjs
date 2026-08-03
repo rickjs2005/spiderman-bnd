@@ -30,6 +30,11 @@ const OUT = "public/media";
 const jobs = [
   // --- Eye texture (R3F material, kept as high-quality jpg) ---
   [`${RAW}/mask-closeup.jpg`, `${OUT}/mask-eye.jpg`, { width: 2048, height: 2048, fit: "inside", format: "jpeg", quality: 90 }],
+  // --- Eye texture, mobile (coarse-pointer devices get this instead --
+  // see src/components/act1/eye-mask.tsx -- half the pixel budget of the
+  // desktop texture since PHASE_EYE's magnification is the same either way,
+  // just fewer texels for the GPU to sample/upload on a phone). ---
+  [`${RAW}/mask-closeup.jpg`, `${OUT}/mask-eye-sm.jpg`, { width: 1024, height: 1024, fit: "inside", format: "jpeg", quality: 90 }],
 
   // --- Hero art ---
   [`${RAW}/poster.jpg`, `${OUT}/poster.webp`, { width: 1600 }],
@@ -146,11 +151,21 @@ for (const [inp, out, opt] of jobs) {
 }
 
 // --- Normal map for the eye crop: greyscale -> Sobel X/Y -> RGB(nx, ny, 255) ---
-{
-  const { data, info } = await sharp(`${OUT}/mask-eye.jpg`)
-    .greyscale()
-    .raw()
-    .toBuffer({ resolveWithObject: true });
+//
+// PERF FIX (Task 12 / Lighthouse): this used to be encoded as a lossless PNG
+// (`.png().toFile(...)`), which was a ~2.8MB file on its own -- MORE THAN
+// HALF the entire page's transfer weight per Lighthouse's network-requests
+// audit, tanking mobile Performance (total-byte-weight, bootup-time,
+// LCP/TBT all flagged it). A Sobel gradient map is essentially per-pixel
+// noise (every neighboring pixel differs), which is close to a worst case
+// for PNG's lossless deflate -- there's very little redundancy for it to
+// exploit. Re-encoding as JPEG q92 (still forgiving for a *subtle* macro
+// bump map at normalScale 1.4, not a hard product render) collapses that to
+// low hundreds of KB. Generated in BOTH the desktop (from mask-eye.jpg,
+// 2048px) and mobile (from mask-eye-sm.jpg, 1024px) sizes, paired 1:1 with
+// eye-mask.tsx's existing coarse-pointer diffuse-map swap.
+async function buildNormalMap(sourcePath, outPath) {
+  const { data, info } = await sharp(sourcePath).greyscale().raw().toBuffer({ resolveWithObject: true });
   const { width: w, height: h } = info;
   const px = (x, y) => data[Math.min(h - 1, Math.max(0, y)) * w + Math.min(w - 1, Math.max(0, x))];
   const out = Buffer.alloc(w * h * 3);
@@ -164,8 +179,10 @@ for (const [inp, out, opt] of jobs) {
       out[i + 2] = 255;
     }
   }
-  await sharp(out, { raw: { width: w, height: h, channels: 3 } }).png().toFile(`${OUT}/mask-eye-normal.png`);
-  console.log("ok", `${OUT}/mask-eye-normal.png`);
+  await sharp(out, { raw: { width: w, height: h, channels: 3 } }).jpeg({ quality: 92 }).toFile(outPath);
+  console.log("ok", outPath);
 }
+await buildNormalMap(`${OUT}/mask-eye.jpg`, `${OUT}/mask-eye-normal.jpg`);
+await buildNormalMap(`${OUT}/mask-eye-sm.jpg`, `${OUT}/mask-eye-normal-sm.jpg`);
 
 console.log("\nDone. Run `ls public/media` to confirm every manifest path in src/lib/media.ts exists.");

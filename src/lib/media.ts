@@ -5,7 +5,14 @@
 
 export const MEDIA = {
   maskEye: "/media/mask-eye.jpg",
-  maskEyeNormal: "/media/mask-eye-normal.png",
+  // Mobile (coarse-pointer) variant, 1024px vs. the desktop 2048px --
+  // see src/components/act1/eye-mask.tsx.
+  maskEyeSm: "/media/mask-eye-sm.jpg",
+  // Both normal maps are JPEG, not PNG -- see prepare-media.mjs's
+  // buildNormalMap() comment: PNG was ~2.8MB (Sobel noise compresses badly
+  // as lossless), more than half the page's total transfer weight.
+  maskEyeNormal: "/media/mask-eye-normal.jpg",
+  maskEyeNormalSm: "/media/mask-eye-normal-sm.jpg",
   poster: "/media/poster.webp",
   spidey: "/media/spidey.webp",
   nyc: ["/media/nyc-1.webp", "/media/nyc-2.webp", "/media/nyc-3.webp", "/media/nyc-4.webp", "/media/nyc-5.webp"],

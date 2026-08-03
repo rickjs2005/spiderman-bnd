@@ -5,6 +5,16 @@
   --blue: #1d3a8f;
   --ink: #0a0a0f;
   --paper: #f4efe6;
+  /* Brighter text-only variants of --red/--blue for small uppercase labels
+     sitting directly on --ink: the brand colors above read fine as
+     backgrounds/borders/rings (white-on-red play button, red ring glow),
+     but AS TEXT on --ink they measure ~4.3:1 (red) and ~1.9:1 (blue) against
+     WCAG's 4.5:1 minimum for normal-weight body-size text -- both fail,
+     blue badly. These two are picked to clear 4.5:1 with margin (6.4:1 /
+     8.3:1) while still reading unambiguously as "red"/"blue". Only used for
+     text; --red/--blue stay as the sole source for every non-text usage. */
+  --red-text: #ff5a47;
+  --blue-text: #7ea6ff;
 }
 
 @keyframes story-fade-in {

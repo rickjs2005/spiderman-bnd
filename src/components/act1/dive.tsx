@@ -108,15 +108,25 @@ function layerOpacity(d: number) {
   return 0;
 }
 
-/** Detected once on mount (not per frame) per the brief. */
+/**
+ * Detected once on mount (not per frame) per the brief -- via a LAZY
+ * useState initializer, not an effect. This used to be effect-deferred (like
+ * act1.tsx's mode detection), which was harmless while `textures` below
+ * unconditionally fetched all 5 layers regardless of isMobile. Task 12 made
+ * that fetch itself conditional (fewer files on coarse pointers, not just
+ * fewer rendered meshes) -- an effect-deferred isMobile would render once
+ * with the wrong guess (isMobile=false), kick off all 5 fetches, THEN
+ * correct to isMobile=true and fetch the 3-layer subset on top of that,
+ * downloading MORE than the pre-Task-12 baseline instead of less. The lazy
+ * initializer avoids that: this component (like eye-mask.tsx's own copy of
+ * this same fix) only ever mounts post-hydration -- nested inside Scene,
+ * which Act1 (act1.tsx) only renders once its own `mode` state has already
+ * resolved to "scene" via a client-only effect -- so reading
+ * `window.matchMedia` synchronously on first render here can never mismatch
+ * an SSR pass that never happened for this subtree.
+ */
 function useIsCoarsePointer() {
-  const [coarse, setCoarse] = useState(false);
-  useEffect(() => {
-    // Mirrors act1.tsx's mode-detection effect: a one-time environment
-    // read on mount, not a response to a changing external subscription.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCoarse(window.matchMedia("(pointer: coarse)").matches);
-  }, []);
+  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
   return coarse;
 }
 
@@ -132,9 +142,21 @@ function useIsCoarsePointer() {
 export function Dive() {
   const camera = useThree((s) => s.camera);
   const scene = useThree((s) => s.scene);
-  const textures = useTexture([...MEDIA.nyc]);
-  const spideyTexture = useTexture(MEDIA.spidey);
   const isMobile = useIsCoarsePointer();
+  // Coarse pointers only ever render 3 of the 5 layers (MOBILE_LAYER_INDICES,
+  // see the JSX below) -- fetch only those 3 files instead of all 5, since
+  // the other 2 are never displayed on that device class. `loadedTextures`
+  // is in the SAME order as `nycUrls`, so `textureForLayer(i)` below maps a
+  // layer's *original* LAYER_Z index back to its slot in that (possibly
+  // reordered/shortened) array.
+  const nycUrls = isMobile ? [...MOBILE_LAYER_INDICES].map((i) => MEDIA.nyc[i]) : [...MEDIA.nyc];
+  const loadedTextures = useTexture(nycUrls);
+  const textureForLayer = (i: number) => {
+    if (!isMobile) return loadedTextures[i];
+    const slot = [...MOBILE_LAYER_INDICES].indexOf(i);
+    return slot === -1 ? undefined : loadedTextures[slot];
+  };
+  const spideyTexture = useTexture(MEDIA.spidey);
 
   const curvedGeometry = useMemo(
     () => buildCurvedPlane(PLANE_WIDTH, PLANE_HEIGHT, CURVE_SEGMENTS, CURVE_DEPTH),
@@ -147,9 +169,9 @@ export function Dive() {
   const prevSpidey = useRef({ x: 0, y: SPIDEY_Y_BASELINE - SPIDEY_Y_AMPLITUDE });
 
   useEffect(() => {
-    for (const t of textures) t.colorSpace = THREE.SRGBColorSpace;
+    for (const t of loadedTextures) t.colorSpace = THREE.SRGBColorSpace;
     spideyTexture.colorSpace = THREE.SRGBColorSpace;
-  }, [textures, spideyTexture]);
+  }, [loadedTextures, spideyTexture]);
 
   useFrame((_, delta) => {
     const p = act1State.progress;
@@ -205,7 +227,7 @@ export function Dive() {
               ref={(m) => {
                 materialRefs.current[i] = m;
               }}
-              map={textures[i]}
+              map={textureForLayer(i)}
               color={tint}
               transparent
               opacity={0}

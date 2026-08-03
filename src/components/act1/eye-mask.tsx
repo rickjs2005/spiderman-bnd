@@ -6,13 +6,34 @@
    pattern and matches the task's "no setState per frame" requirement, not
    an accidental hook-return mutation. */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import { act1State } from "@/lib/act1-store";
 import { MEDIA } from "@/lib/media";
 import { PHASE_EYE, PHASE_CROSS, phaseT } from "./phases";
+
+/**
+ * Detected via a lazy useState initializer, NOT dive.tsx's effect-deferred
+ * pattern -- deliberately different, and not a copy/paste mistake. dive.tsx
+ * defers because its component *might* render during SSR/hydration (React
+ * requires the first client render to match the server's, and `window`
+ * doesn't exist server-side); this component never has that problem, since
+ * EyeMask only ever mounts once Act1's own `mode` state (act1.tsx) flips to
+ * "scene" -- itself deferred to a post-hydration effect -- so EyeMask's very
+ * first render already happens client-side. That matters here specifically
+ * because useTexture's argument selects WHICH FILE to fetch: an effect-
+ * deferred value would render once with the wrong guess (desktop's 2048px
+ * mask-eye.jpg), kick off that fetch, THEN correct to mask-eye-sm.jpg on
+ * coarse pointers -- downloading both and defeating the point of serving a
+ * smaller texture on mobile (confirmed in verification: exactly this
+ * double-fetch before switching to the lazy initializer below).
+ */
+function useIsCoarsePointer() {
+  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  return coarse;
+}
 
 /**
  * public/media/mask-eye.jpg is a loose head-and-shoulders crop (2048x1152),
@@ -50,7 +71,16 @@ const PLANE_WIDTH = 6.9;
 const PLANE_HEIGHT = PLANE_WIDTH * (1152 / 2048);
 
 export function EyeMask() {
-  const [map, normalMap] = useTexture([MEDIA.maskEye, MEDIA.maskEyeNormal]);
+  const isMobile = useIsCoarsePointer();
+  // Coarse pointers (phones/tablets) get the 1024px map+normalMap pair
+  // instead of the 2048px desktop pair -- same UV panning math either way
+  // (see the module comment above), just fewer texels for the GPU to
+  // sample/upload (and far less to download -- see prepare-media.mjs's
+  // buildNormalMap() for why the normal map specifically mattered).
+  const [map, normalMap] = useTexture([
+    isMobile ? MEDIA.maskEyeSm : MEDIA.maskEye,
+    isMobile ? MEDIA.maskEyeNormalSm : MEDIA.maskEyeNormal,
+  ]);
   const materialRef = useRef<THREE.MeshStandardMaterial>(null);
 
   useEffect(() => {

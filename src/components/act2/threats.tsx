@@ -151,7 +151,7 @@ function VillainPanel({ villain }: { villain: Villain }) {
         <h2 className="font-[family-name:var(--font-anton)] text-6xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] drop-shadow-[0_4px_24px_rgba(0,0,0,0.7)] sm:text-8xl md:text-9xl">
           {villain.name}
         </h2>
-        <p className="mt-3 max-w-md text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red)] sm:text-base">
+        <p className="mt-3 max-w-md text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red-text)] sm:text-base">
           {villain.actor}
         </p>
         <p className="mt-2 max-w-lg text-base text-[var(--paper)]/85 sm:text-lg">{villain.line}</p>
@@ -259,7 +259,7 @@ function UnseenPanel({ villain }: { villain: Villain }) {
             {villain.name}
           </h2>
         </div>
-        <p className="mt-3 max-w-md text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red)] sm:text-base">
+        <p className="mt-3 max-w-md text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red-text)] sm:text-base">
           {villain.actor}
         </p>
         <p className="mt-2 max-w-lg text-base text-[var(--paper)]/85 sm:text-lg">{villain.line}</p>
@@ -288,7 +288,7 @@ function Wildcards() {
             <h3 className="font-[family-name:var(--font-anton)] text-4xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-5xl md:text-6xl">
               {wildcard.name}
             </h3>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--blue)] sm:text-sm">
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--blue-text)] sm:text-sm">
               {wildcard.actor}
             </p>
             <p className="mt-2 max-w-sm text-sm text-[var(--paper)]/85 sm:text-base">{wildcard.line}</p>
@@ -319,7 +319,10 @@ function StaticThreats() {
                 src={MEDIA.villains[villain.key]}
                 alt={villain.key === "unseen" ? "" : `${villain.name} concept still`}
                 fill
-                sizes="100vw"
+                // This wrapper sits inside the `mx-auto max-w-4xl` column
+                // above, not full viewport width -- cap sizes at 896px
+                // (max-w-4xl) instead of always requesting a 100vw image.
+                sizes="(min-width: 896px) 896px, 100vw"
                 className={`object-cover ${villain.key === "unseen" ? "grayscale brightness-[0.4] contrast-125" : ""}`}
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[var(--ink)] via-[var(--ink)]/10 to-transparent" />
@@ -327,7 +330,7 @@ function StaticThreats() {
                 <h2 className="font-[family-name:var(--font-anton)] text-5xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-7xl">
                   {villain.name}
                 </h2>
-                <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red)]">
+                <p className="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-[var(--red-text)]">
                   {villain.actor}
                 </p>
                 <p className="mt-2 max-w-lg text-base text-[var(--paper)]/85">{villain.line}</p>
@@ -355,7 +358,7 @@ function StaticThreats() {
                 <h3 className="font-[family-name:var(--font-anton)] text-3xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-4xl">
                   {wildcard.name}
                 </h3>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--blue)]">
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-[var(--blue-text)]">
                   {wildcard.actor}
                 </p>
                 <p className="mt-1 max-w-xs text-sm text-[var(--paper)]/85">{wildcard.line}</p>

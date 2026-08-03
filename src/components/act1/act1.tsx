@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,6 +11,24 @@ import { MEDIA } from "@/lib/media";
 import { HalftoneBurst } from "./halftone-burst";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/**
+ * PERF (Task 12 / Lighthouse): dynamically imported with ssr:false instead
+ * of statically imported (previously passed in from page.tsx as `children`,
+ * `<Act1><Scene/></Act1>`). three.js + @react-three/fiber + drei were
+ * getting bundled into the SAME initial JS chunk as gsap/ScrollTrigger and
+ * react-dom (a 968KB chunk, ~2.5s of scripting time on Lighthouse's
+ * throttled mobile CPU profile -- the dominant contributor to a 3.25s Total
+ * Blocking Time). Splitting Scene into its own chunk means that weight is
+ * fetched/parsed/executed off the critical path instead of blocking
+ * hydration of the entire page. ssr:false requires a Client Component (this
+ * file already is one) -- page.tsx (a Server Component) couldn't do this
+ * itself, per Next's lazy-loading docs. No visual change: `mode==="scene"`
+ * already gated when Scene rendered at all (see the mode-detection effect
+ * below), so the chunk-fetch just overlaps that same window instead of
+ * following it.
+ */
+const Scene = dynamic(() => import("./scene").then((m) => m.Scene), { ssr: false });
 
 /** Act 1 container height, in viewport heights, driving the scroll-scrub. */
 const ACT1_VH = 400;
@@ -52,7 +71,7 @@ const BADGE_OUT_END = 0.42;
  * The overlay reads act1State.progress via rAF and writes straight to
  * element.style -- no setState per frame, no re-render on scroll.
  */
-export function Act1({ children }: { children?: ReactNode }) {
+export function Act1() {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const badgeRef = useRef<HTMLParagraphElement>(null);
@@ -165,7 +184,7 @@ export function Act1({ children }: { children?: ReactNode }) {
       className="relative"
     >
       <div className="sticky top-0 h-screen overflow-hidden bg-[var(--ink)]">
-        {mode === "scene" && children}
+        {mode === "scene" && <Scene />}
 
         {mode === "scene" && <HalftoneBurst containerRef={containerRef} />}
 
