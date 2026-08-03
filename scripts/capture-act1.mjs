@@ -8,7 +8,7 @@ import { chromium } from "playwright";
 const [, , url = "http://localhost:3000", outDir = "shots"] = process.argv;
 const points = [
   0, 0.02, 0.05, 0.08, 0.1, 0.15, 0.2, 0.22, 0.25, 0.3, 0.33, 0.35, 0.38, 0.4, 0.42, 0.45, 0.48, 0.5, 0.55, 0.6, 0.65,
-  0.7, 0.75, 0.8, 0.85, 0.9, 0.93, 0.95,
+  0.7, 0.75, 0.8, 0.85, 0.9, 0.93, 0.95, 0.97, 1,
 ];
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 810 } });

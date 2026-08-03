@@ -60,6 +60,17 @@ const WEB_MAX_OPACITY = 0.85;
  * "flash and fade" instead of a slow sine breathing. */
 const WEB_PULSE_SHARPNESS = 4;
 
+/** Progress range over which webs/dust fade OUT to exactly 0, ending right
+ * at PHASE_DIVE's own end (0.95). phaseT saturates at 1 for p >= 0.95 and
+ * stays there through PHASE_BURST and beyond -- without this second gate,
+ * the `active` early-out below never re-closes once the dive is over, so
+ * webs/dust would keep doing per-frame work (and a lingering pulsing web
+ * line would visually fight Task 7's halftone burst overlay) long after the
+ * dive ends. `1 - phaseT(p, WEB_DUST_FADE_OUT)` is multiplied into every
+ * opacity so nothing pops abruptly -- it just reaches 0 exactly as
+ * PHASE_DIVE itself ends. */
+const WEB_DUST_FADE_OUT: [number, number] = [0.93, PHASE_DIVE[1]];
+
 const DUST_COUNT = 400; // hard cap -- project-wide particle budget
 const DUST_BOX = { x: 12, y: 8, z: 16 } as const;
 /** Local-space z drift per second, toward the camera (z=0). Dust starts
@@ -132,10 +143,14 @@ export function Webs() {
   useFrame((_, delta) => {
     const p = act1State.progress;
     const diveT = phaseT(p, PHASE_DIVE);
-    const active = diveT > 0.0005;
+    // Lower bound (diveT ramping up from 0) AND upper bound (p past PHASE_DIVE's
+    // end, where diveT itself saturates at 1 and can no longer signal "done") --
+    // see the WEB_DUST_FADE_OUT comment above for why the upper bound matters.
+    const active = diveT > 0.0005 && p < PHASE_DIVE[1];
     if (groupRef.current) groupRef.current.visible = active;
     if (!active) return; // cheap early-out: no per-line/per-particle work outside PHASE_DIVE
 
+    const fadeOut = 1 - phaseT(p, WEB_DUST_FADE_OUT);
     const camZ = camera.position.z;
 
     // Spidey's current pendulum position -- see the SOURCE OF TRUTH comment
@@ -180,7 +195,7 @@ export function Webs() {
       const localU = u + i * WEB_PHASE_STEP;
       const pulse = Math.cos(2 * localU) ** 2;
       const mat = webMaterialRefs.current[i];
-      if (mat) mat.opacity = pulse ** WEB_PULSE_SHARPNESS * diveT * WEB_MAX_OPACITY;
+      if (mat) mat.opacity = pulse ** WEB_PULSE_SHARPNESS * diveT * fadeOut * WEB_MAX_OPACITY;
     }
 
     // Dust: positions stored in local space (a box straddling the camera);
@@ -198,7 +213,7 @@ export function Webs() {
       dustPositions[zi] = z;
     }
     if (dustAttrRef.current) dustAttrRef.current.needsUpdate = true;
-    if (dustMaterialRef.current) dustMaterialRef.current.opacity = DUST_MAX_OPACITY * diveT;
+    if (dustMaterialRef.current) dustMaterialRef.current.opacity = DUST_MAX_OPACITY * diveT * fadeOut;
   });
 
   return (
