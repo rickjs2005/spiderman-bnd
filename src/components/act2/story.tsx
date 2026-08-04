@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { STORY_PANELS } from "@/lib/content";
+import { STORY_PANELS, SECTION_LABELS } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -122,7 +122,7 @@ export function Story() {
     <section
       id="story"
       ref={sectionRef}
-      aria-label="The Story"
+      aria-label={SECTION_LABELS.story}
       className="relative h-screen overflow-hidden bg-[var(--paper)] text-[var(--ink)]"
     >
       <div className="halftone absolute inset-0 opacity-40" aria-hidden />
@@ -185,7 +185,7 @@ function StaticStory() {
   return (
     <section
       id="story"
-      aria-label="The Story"
+      aria-label={SECTION_LABELS.story}
       className="relative bg-[var(--paper)] px-6 py-20 text-[var(--ink)] sm:px-10"
     >
       <div className="halftone absolute inset-0 opacity-30" aria-hidden />

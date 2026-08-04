@@ -15,23 +15,26 @@ import { MEDIA } from "@/lib/media";
 import { PHASE_EYE, PHASE_CROSS, phaseT } from "./phases";
 
 /**
- * Detected via a lazy useState initializer, NOT dive.tsx's effect-deferred
- * pattern -- deliberately different, and not a copy/paste mistake. dive.tsx
- * defers because its component *might* render during SSR/hydration (React
- * requires the first client render to match the server's, and `window`
- * doesn't exist server-side); this component never has that problem, since
- * EyeMask only ever mounts once Act1's own `mode` state (act1.tsx) flips to
- * "scene" -- itself deferred to a post-hydration effect -- so EyeMask's very
- * first render already happens client-side. That matters here specifically
- * because useTexture's argument selects WHICH FILE to fetch: an effect-
- * deferred value would render once with the wrong guess (desktop's 2048px
- * mask-eye.jpg), kick off that fetch, THEN correct to mask-eye-sm.jpg on
- * coarse pointers -- downloading both and defeating the point of serving a
- * smaller texture on mobile (confirmed in verification: exactly this
- * double-fetch before switching to the lazy initializer below).
+ * Detected via a lazy useState initializer (same pattern as dive.tsx's own
+ * copy of this hook -- both components need it for the same reason, see
+ * below). useTexture's argument selects WHICH FILE to fetch: an
+ * effect-deferred value would render once with the wrong guess (desktop's
+ * 2048px mask-eye.jpg), kick off that fetch, THEN correct to
+ * mask-eye-sm.jpg on coarse pointers -- downloading both and defeating the
+ * point of serving a smaller texture on mobile (confirmed in verification:
+ * exactly this double-fetch before switching to the lazy initializer below).
+ * A lazy initializer is safe here specifically because EyeMask only ever
+ * mounts once Act1's own `mode` state (act1.tsx) flips to "scene" --
+ * itself deferred to a post-hydration effect -- so EyeMask's very first
+ * render already happens client-side; there's no SSR pass for this
+ * subtree to mismatch. `typeof window !== "undefined"` below is a
+ * defense-in-depth guard on top of that (see also dive.tsx), not the
+ * primary safety mechanism.
  */
 function useIsCoarsePointer() {
-  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  const [coarse] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+  );
   return coarse;
 }
 

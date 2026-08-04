@@ -26,6 +26,29 @@
   }
 }
 
+/* Global reduced-motion backstop. Most motion in this codebase is already
+   gated component-side (act1.tsx, story.tsx, threats.tsx, watch.tsx,
+   legacy.tsx each read prefers-reduced-motion once on mount and render a
+   fully separate, static tree instead of a reduced-parameter version of the
+   same animation) -- but the *static* fallback trees still use a plain CSS
+   `animate-[story-fade-in_...]` entrance (story.tsx, threats.tsx) with no
+   JS gate of their own, and there was no site-wide backstop for it (or for
+   any future animation/transition added without its own reduced-motion
+   check). Collapsing duration to near-zero (not exactly 0) rather than
+   `animation: none`/`transition: none` keeps `animationend`/`transitionend`
+   firing -- any code relying on those events for cleanup still gets them,
+   just near-instantly instead of never. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* "The Unseen" villain name glitch (src/components/act2/threats.tsx):
    two aria-hidden RGB-offset clones sitting behind the real heading, each
    sliced with clip-path inset() bands that jump between keyframes (steps()

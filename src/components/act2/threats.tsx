@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { VILLAINS, WILDCARDS } from "@/lib/content";
+import { VILLAINS, WILDCARDS, SECTION_LABELS, CONCEPT_STILL_SUFFIX } from "@/lib/content";
 import { MEDIA } from "@/lib/media";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -13,10 +13,14 @@ type Villain = (typeof VILLAINS)[number];
 
 /** How much extra scroll each villain panel's pin holds, past its own
  * 100vh -- matches the brief exactly (a short pin per panel, not one long
- * one). Three panels stacked in normal flow, each self-pinning in turn,
- * gives the same "consecutive full-screen pin" handoff Story/Act1 already
- * rely on (see act1.tsx's sticky-release note) -- no manual offset math
- * needed between panels. */
+ * one). This is the first place in the codebase that self-pins several
+ * consecutive full-screen panels in a row (Story pins its section once, as
+ * one unit; Act1 is one long scroll-scrub, not a stack of pins) -- there's
+ * no existing precedent being mirrored here. It works because each panel is
+ * an independent ScrollTrigger with its own `pin: true`: GSAP naturally
+ * hands off from one panel's pin to the next as normal document flow
+ * carries the scroll position from one panel's box into the next's, so no
+ * manual offset math is needed between panels. */
 const PANEL_END = "+=100%";
 
 /**
@@ -114,7 +118,7 @@ export function Threats() {
   if (mode === "static") return <StaticThreats />;
 
   return (
-    <section id="threats" ref={sectionRef} aria-label="The Threats" className="relative bg-[var(--ink)]">
+    <section id="threats" ref={sectionRef} aria-label={SECTION_LABELS.threats} className="relative bg-[var(--ink)]">
       {VILLAINS.map((villain) =>
         villain.key === "unseen" ? (
           <UnseenPanel key={villain.key} villain={villain} />
@@ -139,7 +143,7 @@ function VillainPanel({ villain }: { villain: Villain }) {
         <div className="threat-img relative h-full w-full">
           <Image
             src={src}
-            alt={`${villain.name} concept still`}
+            alt={`${villain.name} ${CONCEPT_STILL_SUFFIX}`}
             fill
             sizes="100vw"
             className="object-cover"
@@ -278,7 +282,7 @@ function Wildcards() {
         <div key={wildcard.key} className="wildcard-card relative h-[60vh] overflow-hidden sm:h-full">
           <Image
             src={MEDIA.wildcards[wildcard.key]}
-            alt={`${wildcard.name} concept still`}
+            alt={`${wildcard.name} ${CONCEPT_STILL_SUFFIX}`}
             fill
             sizes="(min-width: 640px) 50vw, 100vw"
             className="object-cover"
@@ -306,7 +310,7 @@ function Wildcards() {
  * visual choice, not motion) but drops the animated distortion entirely. */
 function StaticThreats() {
   return (
-    <section id="threats" aria-label="The Threats" className="relative bg-[var(--ink)] px-6 py-16 sm:px-10">
+    <section id="threats" aria-label={SECTION_LABELS.threats} className="relative bg-[var(--ink)] px-6 py-16 sm:px-10">
       <div className="mx-auto flex max-w-4xl flex-col gap-10">
         {VILLAINS.map((villain, i) => (
           <div
@@ -317,7 +321,7 @@ function StaticThreats() {
             <div className="relative h-[60vh] w-full">
               <Image
                 src={MEDIA.villains[villain.key]}
-                alt={villain.key === "unseen" ? "" : `${villain.name} concept still`}
+                alt={villain.key === "unseen" ? "" : `${villain.name} ${CONCEPT_STILL_SUFFIX}`}
                 fill
                 // This wrapper sits inside the `mx-auto max-w-4xl` column
                 // above, not full viewport width -- cap sizes at 896px
@@ -348,7 +352,7 @@ function StaticThreats() {
             >
               <Image
                 src={MEDIA.wildcards[wildcard.key]}
-                alt={`${wildcard.name} concept still`}
+                alt={`${wildcard.name} ${CONCEPT_STILL_SUFFIX}`}
                 fill
                 sizes="(min-width: 640px) 50vw, 100vw"
                 className="object-cover"

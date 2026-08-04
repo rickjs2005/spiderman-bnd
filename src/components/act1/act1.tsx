@@ -66,10 +66,11 @@ const BADGE_OUT_END = 0.42;
 
 /**
  * Act 1: a ~4-screen-tall container; inside it, a sticky 100vh frame holds
- * the scene (the R3F canvas, e.g. <Scene/> from ./scene, passed in as
- * `children`) plus a title overlay that fades in/out as the scene plays.
- * The overlay reads act1State.progress via rAF and writes straight to
- * element.style -- no setState per frame, no re-render on scroll.
+ * the scene (the R3F canvas, <Scene/> from ./scene, dynamically imported
+ * above and rendered directly once `mode` resolves to "scene") plus a title
+ * overlay that fades in/out as the scene plays. The overlay reads
+ * act1State.progress via rAF and writes straight to element.style -- no
+ * setState per frame, no re-render on scroll.
  */
 export function Act1() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -179,7 +180,7 @@ export function Act1() {
     <section
       id="act1"
       ref={containerRef}
-      aria-label="Act 1"
+      aria-label={SITE.act1Label}
       style={{ height: `${ACT1_VH}vh` }}
       className="relative"
     >
@@ -210,7 +211,7 @@ export function Act1() {
             onClick={skipIntro}
             className="pointer-events-auto absolute bottom-6 right-5 z-20 rounded-full border border-[var(--paper)]/25 bg-[var(--ink)]/40 px-4 py-2 text-xs font-semibold text-[var(--paper)]/85 backdrop-blur-sm transition-colors hover:border-[var(--paper)]/50 hover:bg-[var(--ink)]/60 sm:right-8"
           >
-            Skip intro
+            {SITE.skipIntroLabel}
           </button>
         )}
       </div>
@@ -223,7 +224,7 @@ function StaticHero() {
   return (
     <section
       id="act1"
-      aria-label="Act 1"
+      aria-label={SITE.act1Label}
       className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-[var(--ink)] px-6 text-center"
     >
       <Image

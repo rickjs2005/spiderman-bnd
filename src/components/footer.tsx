@@ -1,4 +1,4 @@
-import { SITE, FINALE } from "@/lib/content";
+import { SITE, FINALE, FOOTER } from "@/lib/content";
 
 export default function Footer() {
   return (
@@ -6,12 +6,12 @@ export default function Footer() {
       <p>{SITE.disclaimer}</p>
       <p>{FINALE.credits}</p>
       <a
-        href="https://www.marvel.com/movies/spider-man-brand-new-day"
+        href={FOOTER.officialSiteHref}
         target="_blank"
         rel="noopener noreferrer"
         className="underline hover:opacity-100"
       >
-        Official movie site
+        {FOOTER.officialSiteLabel}
       </a>
     </footer>
   );

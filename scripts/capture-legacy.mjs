@@ -189,9 +189,17 @@ console.log("legacy <img alt> values:", JSON.stringify(altTexts));
 // Task 12 dedupe: FINALE.credits + SITE.disclaimer used to render here AND
 // in the site-wide <Footer/> immediately below Legacy in page.tsx -- now
 // only Footer renders them, so .finale-credits/.finale-disclaimer no longer
-// exist in the DOM at all. Assert that instead of the old innerText() read.
+// exist in the DOM at all. Actually assert that (throw + non-zero exit),
+// not just log it, so a future regression that re-introduces the double
+// render fails this capture script instead of silently passing.
 const finaleCreditsCount = await page.locator(".finale-credits, .finale-disclaimer").count();
 console.log("finale-credits/finale-disclaimer elements in DOM (expect 0, deduped into Footer):", finaleCreditsCount);
+if (finaleCreditsCount !== 0) {
+  await browser.close();
+  throw new Error(
+    `Expected 0 .finale-credits/.finale-disclaimer elements in the DOM (Task 12 deduped them into Footer), found ${finaleCreditsCount}.`,
+  );
+}
 const footerDisclaimerText = await page.locator("footer p").first().innerText();
 console.log("footer disclaimer text:", footerDisclaimerText);
 

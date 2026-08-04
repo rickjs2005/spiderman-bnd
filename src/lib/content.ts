@@ -1,5 +1,13 @@
 export const SITE = {
   title: "SPIDER-MAN: BRAND NEW DAY",
+  // nav.tsx's fixed logo -- shorter than the full `title` above (no
+  // "SPIDER-MAN:" prefix), so it's its own field rather than reusing title.
+  navBrand: "BRAND NEW DAY",
+  // <title>/OpenGraph title (layout.tsx). Deliberately its own field, not a
+  // reuse of `title` above -- the two read differently ("SPIDER-MAN: BRAND
+  // NEW DAY" vs "Spider-Man: Brand New Day — Fan Concept") and centralizing
+  // must not change the byte-for-byte rendered/meta text.
+  metaTitle: "Spider-Man: Brand New Day — Fan Concept",
   tagline: "A fan-made cinematic concept",
   badge: "FAN CONCEPT — NOT AFFILIATED WITH MARVEL OR SONY",
   disclaimer:
@@ -7,7 +15,27 @@ export const SITE = {
   metaDescription:
     "A fan-made cinematic scroll experience for Spider-Man: Brand New Day (2026). Not affiliated with Marvel, Sony Pictures or Disney.",
   releaseLine: "In theaters July 31, 2026 · Directed by Destin Daniel Cretton",
+  // act1.tsx's "skip past the scroll-scrub" button.
+  skipIntroLabel: "Skip intro",
+  // Act 1's `aria-label="Act 1"` (both the scene tree and its
+  // reduced-motion StaticHero fallback share this landmark label).
+  act1Label: "Act 1",
 };
+
+// Section `aria-label`s / landmark names, one field per Act 2 section --
+// centralized here rather than inlined so every user-facing string (even
+// accessibility-only ones) has one home, per the project's copy rule.
+export const SECTION_LABELS = {
+  story: "The Story",
+  threats: "The Threats",
+  watch: "Watch",
+  legacy: "The Legacy",
+} as const;
+
+// Shared suffix composed onto every `${entry.title} …`/`${villain.name} …`
+// alt-text fragment across threats.tsx and legacy.tsx -- centralizing the
+// literal words even though the noun they follow is per-item data.
+export const CONCEPT_STILL_SUFFIX = "concept still";
 
 export const STORY_PANELS = [
   { sfx: "GONE!", title: "New York has moved on.", body: "Nobody remembers Peter Parker. Not his friends. Not the city he saves every night." },
@@ -55,6 +83,11 @@ export const WATCH = {
   trailerHeading: "Official Trailer",
   playLabel: "Play official trailer",
   galleryHeading: "Concept Gallery",
+  // <iframe title> for the trailer embed once clicked.
+  iframeTitle: "Official trailer",
+  // Fallback alt-fragment used only if MEDIA.gallery ever outgrows
+  // GALLERY_CAPTIONS.
+  captionFallback: "Concept still — Brand New Day.",
 } as const;
 
 export const FINALE = {
@@ -63,3 +96,8 @@ export const FINALE = {
   copiedToast: "Link copied!",
   credits: "A fan tribute built with Next.js, Three.js and GSAP.",
 };
+
+export const FOOTER = {
+  officialSiteLabel: "Official movie site",
+  officialSiteHref: "https://www.marvel.com/movies/spider-man-brand-new-day",
+} as const;

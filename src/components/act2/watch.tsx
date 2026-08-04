@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { GALLERY_CAPTIONS, WATCH } from "@/lib/content";
+import { GALLERY_CAPTIONS, WATCH, SECTION_LABELS } from "@/lib/content";
 import { MEDIA, TRAILER_YT_ID } from "@/lib/media";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -16,7 +16,7 @@ const HOVER_SCALE = 1.06;
 /** Fallback for any gallery image beyond GALLERY_CAPTIONS' length -- keeps
  * every <Image alt> meaningful even if the two arrays (MEDIA.gallery,
  * GALLERY_CAPTIONS) ever drift apart again. */
-const CAPTION_FALLBACK = "Concept still — Brand New Day.";
+const CAPTION_FALLBACK = WATCH.captionFallback;
 
 /**
  * Act 2, "Watch": a click-to-load trailer facade (poster + play button in a
@@ -74,7 +74,7 @@ export function Watch() {
     <section
       id="watch"
       ref={sectionRef}
-      aria-label="Watch"
+      aria-label={SECTION_LABELS.watch}
       className="relative bg-[var(--ink)] px-6 py-20 text-[var(--paper)] sm:px-10"
     >
       <div className="mx-auto max-w-5xl">
@@ -106,7 +106,7 @@ function TrailerFacade({ playing, onPlay }: { playing: boolean; onPlay: () => vo
       {playing ? (
         <iframe
           src={`https://www.youtube-nocookie.com/embed/${TRAILER_YT_ID}?autoplay=1`}
-          title="Official trailer"
+          title={WATCH.iframeTitle}
           allow="autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
           className="absolute inset-0 h-full w-full"

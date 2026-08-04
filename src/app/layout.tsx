@@ -22,10 +22,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Spider-Man: Brand New Day — Fan Concept",
+  title: SITE.metaTitle,
   description: SITE.metaDescription,
   openGraph: {
-    title: "Spider-Man: Brand New Day — Fan Concept",
+    title: SITE.metaTitle,
     description: SITE.metaDescription,
     type: "website",
   },

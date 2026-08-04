@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FINALE, LEGACY, SITE, TIMELINE } from "@/lib/content";
+import { FINALE, LEGACY, SITE, TIMELINE, SECTION_LABELS, CONCEPT_STILL_SUFFIX } from "@/lib/content";
 import { MEDIA } from "@/lib/media";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -192,7 +192,7 @@ export function Legacy() {
   }
 
   return (
-    <section id="legacy" ref={sectionRef} aria-label="The Legacy" className="relative bg-[var(--ink)]">
+    <section id="legacy" ref={sectionRef} aria-label={SECTION_LABELS.legacy} className="relative bg-[var(--ink)]">
       <div ref={pinRef} className="legacy-pin relative h-screen w-full overflow-hidden">
         {/* top-20: the site's <Nav> is fixed + transparent-background (see
             nav.tsx) and overlays every section forever, not just at scroll
@@ -259,7 +259,7 @@ function LegacyCard({
     <div className={`legacy-card relative overflow-hidden bg-[var(--ink)] ${className}`}>
       <Image
         src={src}
-        alt={`${entry.title} concept still`}
+        alt={`${entry.title} ${CONCEPT_STILL_SUFFIX}`}
         fill
         sizes={sizes}
         className="object-cover"
@@ -350,12 +350,15 @@ function ShareToast({ message }: { message: string | null }) {
  * scroll-triggered web-draw/mask-rise -- the four TIMELINE cards stack
  * vertically (full-width, reading order) and the finale renders in its
  * fully-settled end state (webs solid/undrawn-to-drawn distinction removed
- * entirely, mask/headline/credits/disclaimer all at opacity 1 from the
- * start) so everything is immediately legible with zero motion. */
+ * entirely, mask/headline/share button all at opacity 1 from the start) so
+ * everything is immediately legible with zero motion. Credits + disclaimer
+ * are NOT rendered here (see the "NOT repeated here" comment on
+ * FinaleContent below) -- the site-wide <Footer/> is their one home in
+ * every mode, static or animated alike. */
 function StaticLegacy({ onShare, toast }: { onShare: () => void; toast: string | null }) {
   return (
     <>
-      <section id="legacy" aria-label="The Legacy" className="relative bg-[var(--ink)] px-6 py-16 sm:px-10">
+      <section id="legacy" aria-label={SECTION_LABELS.legacy} className="relative bg-[var(--ink)] px-6 py-16 sm:px-10">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--red-text)]">{LEGACY.eyebrow}</p>
         <h2 className="mt-2 font-[family-name:var(--font-anton)] text-4xl uppercase leading-[0.9] tracking-tight text-[var(--paper)] sm:text-6xl">
           {LEGACY.heading}

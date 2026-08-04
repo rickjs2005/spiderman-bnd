@@ -126,7 +126,9 @@ function layerOpacity(d: number) {
  * an SSR pass that never happened for this subtree.
  */
 function useIsCoarsePointer() {
-  const [coarse] = useState(() => window.matchMedia("(pointer: coarse)").matches);
+  const [coarse] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches,
+  );
   return coarse;
 }
 
