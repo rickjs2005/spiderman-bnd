@@ -11,9 +11,9 @@ export const SITE = {
   tagline: "A fan-made cinematic concept",
   badge: "FAN CONCEPT — NOT AFFILIATED WITH MARVEL OR SONY",
   disclaimer:
-    "Fan concept — not affiliated with Marvel, Sony Pictures or Disney. All characters and images © their respective owners.",
+    "Non-commercial fan concept — not affiliated with Marvel, Sony Pictures or Disney. All characters and images © their respective owners.",
   metaDescription:
-    "A fan-made cinematic scroll experience for Spider-Man: Brand New Day (2026). Not affiliated with Marvel, Sony Pictures or Disney.",
+    "A fan-made, non-commercial cinematic scroll experience for Spider-Man: Brand New Day (2026). Not affiliated with Marvel, Sony Pictures or Disney.",
   releaseLine: "In theaters July 31, 2026 · Directed by Destin Daniel Cretton",
   // act1.tsx's "skip past the scroll-scrub" button.
   skipIntroLabel: "Skip intro",
